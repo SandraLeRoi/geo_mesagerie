@@ -1,7 +1,6 @@
 import React from 'react';
 import axios from "axios";
 import {useState} from 'react';
-
 import {View} from 'react-native';
 import TextInput from "react-native-web/src/exports/TextInput";
 import {Button} from "react-native-web";
@@ -9,11 +8,11 @@ import { useHistory } from "react-router-dom";
 import Text from "react-native-web/dist/exports/Text";
 
 
-function ConnexionPage() {
+function ConnexionPage(props) {
 
-    const [username, setUsername] = useState("")
-    const [password, setPassword] = useState("")
-    const [identifiant, setIdentifiant] = useState("")
+    const [username, setUsername] = useState("oawx")
+    const [password, setPassword] = useState("oawx")
+
     let history = useHistory();
 
 
@@ -24,16 +23,17 @@ function ConnexionPage() {
         },{}).then (
             response => {
                 console.log(response.data);
-                setIdentifiant(response.data.token);
-                history.push("/messages/" + identifiant);
+                props.setToken(response.data.token);
+                props.setId(response.data.id)
+                history.push("/messages");
             })
 
     }
 
     return (<View>
         <Text>Connectez-vous !</Text>
-        <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setUsername} placeholder="login"/>
-        <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setPassword} placeholder="password"/>
+        <TextInput value={username} style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setUsername} placeholder="login"/>
+        <TextInput value={password} style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setPassword} placeholder="password"/>
         <Button onPress={connexion} title="Valider"></Button>
 
     </View>)

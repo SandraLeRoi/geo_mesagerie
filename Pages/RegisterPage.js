@@ -5,6 +5,7 @@ import {useHistory} from "react-router-dom"
 import {View} from 'react-native';
 import TextInput from "react-native-web/src/exports/TextInput";
 import {Button} from "react-native-web";
+import Text from "react-native-web/src/exports/Text";
 
 function RegisterPage() {
 
@@ -20,11 +21,12 @@ function RegisterPage() {
         },{}).then (
             response => {
                 console.log(response.data)
-                history.push("/connexion")
+                history.push("/Connexion")
             })
     }
 
     return (<View>
+        <Text>Enregistrez-vous !</Text>
         <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setUsername} placeholder="login"/>
         <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setPassword} placeholder="password"/>
         <Button onPress={register} title="Valider"></Button>

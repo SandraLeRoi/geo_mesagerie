@@ -1,77 +1,94 @@
 import React from "react";
 import Text from "react-native-web/dist/exports/Text";
-import * as Location from "expo-location";
-import * as axios from "axios";
+import  axios from "axios";
 import {useState, useEffect} from "react";
 import {View} from "react-native";
-import {useParams} from "react-router-dom"
+import TextInput from "react-native-web/dist/exports/TextInput";
+import {Button, FlatList} from "react-native-web";
 
-function MessagesPage() {
-
-    const [location, setLocation] = useState(null)
-    const [longitude, setLongitude] = useState(null);
-    const [latitude, setLatitude] = useState(null);
-    const [adresse, setAdresse] = useState(null);
+function MessagesPage(props) {
+    //envoyer un message
     const [message, setMessage] = useState(null);
-    const token= "";
+    //les catégories
     const [category, setCategory] = useState(null);
-    const {params} = useParams()
 
-    useEffect( ()=>{
-        (async() => {
-            const { status } = await Location.requestPermissionsAsync();
-            //setLocation("status")
-            if (status !== 'granted') {
-                console.error('permission not granted');
-            }
-            const position = await Location.getCurrentPositionAsync();
-            setLocation(position)
-            setLongitude(position.coords.longitude);
-            setLatitude(position.coords.latitude);
+    //tous les messages de la catégories
+    const [messagesChat, setMessagesChat] = useState([])
 
-        })()
+    // id tous les auteurs
+    const [user, setUser] = useState([]);
+
+    useEffect(getCategory,[])
+    useEffect(getAllUsers,[])
+
+    useEffect( function() {
+
     },[])
 
-    useEffect(findAddress, [longitude,latitude])
-    useEffect(getCategory,[])
-
-    function findAddress() {
-        axios.get("https://api-adresse.data.gouv.fr/reverse/?lon=" + longitude + "&lat=" + latitude)
-            .then(response => {
-                setAdresse(response.data.features[0].properties.citycode);
-            })
-    }
-
-    function getMessages() {
-        axios.get("https://api.dunarr.com/api/messages", {
-            "category": "bidule",
-            "citycode": adresse
-        },{
-            headers : {"Authorization": "Bearer "+token}
+    // récupérer tous les messages
+    function getMessages(user) {
+        axios.get("https://api.dunarr.com/api/messages",{
+            headers : {"Authorization": "Bearer " + props.token},
+            params: {"citycode": props.citycode,
+                "category": category,}
         }).then(response => {
-            console.log(response.data);
+            // console.log(response.data.results);
+            // console.log(user);
+            // console.log(messagesChat);
+            //for (var i = 0; i<= user.length; i++) {
+                response.data.results[0].author = user.find(function (singleUser){
+                    // console.log( singleUser.id , response.data.results[0].author.id, singleUser.id === response.data.results[0].author.id)
+                    return singleUser.id === response.data.results[0].author.id
+                })
+            //}
+            setMessagesChat(response.data.results);
         })
     }
 
+    //envoyer un message
     function postMessages() {
         axios.post("https://api.dunarr.com/api/messages", {
             "message": message,
             "category" : category,
-            "citycode": adresse
+            "citycode": props.citycode
         },{
-            headers: {"Authorization": "Bearer " + token }
+            headers: {"Authorization": "Bearer " + props.token }
         }).then(response => {
             console.log(response.data);
         })
     }
 
+    //récupérer la catégorie
     function getCategory() {
-        axios.get("htpps://api.dunarr.com/api/categories", {}, {
-            headers: {"Authorization": "Bearer "+ token }
+        axios.get("htpps://api.dunarr.com/api/categories",{
+            headers: {"Authorization": "Bearer " + props.token }
         })
+            .then(response => {
+                console.log(response.data)
+                setCategory(response.data[0].id)
+            })
     }
 
-    return (<View><Text>Hello</Text><Text>{JSON.stringify(params)}</Text></View>)
+
+    //récupère tous les auteurs
+    function getAllUsers() {
+        axios.get("https://api.dunarr.com/api/users",{
+            headers: {"Authorization": "Bearer " + props.token}
+        })
+            .then(response => {
+                console.log(response.data)
+                setUser(response.data)
+                setInterval(()=>{getMessages(response.data)}, 2000)
+            })
+    }
+
+
+    return (<View>
+        <Text>Hello</Text>
+        <TextInput onChangeText={setMessage} placeholder="Message"/>
+        <Button onPress={postMessages} title="Envoyer"/>
+        <FlatList data={messagesChat} renderItem={({mess}) => <Text> {mess.author.username} a dit : "{mess.content}" </Text>} />
+    </View>)
 }
 
 export default MessagesPage;
